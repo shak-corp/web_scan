@@ -1,0 +1,72 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  scans     ScanJob[]
+  crawls    CrawlTask[]
+  consents  Consent[]
+  auditLogs AuditLog[]
+  role      String   @default("user")
+}
+
+model Consent {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  user       User?    @relation(fields: [userId], references: [id])
+  statement  String
+  acceptedAt DateTime
+  ip         String?
+  notes      String?
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  eventType String
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  details   String
+  refId     Int?
+  createdAt DateTime @default(now())
+}
+
+model ScanJob {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  status    String
+  result    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs      Log[]
+}
+
+model CrawlTask {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  config    Json
+  result    Json
+  startedAt DateTime
+  finishedAt DateTime?
+  logs      Log[]
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  type      String
+  jobId     Int?
+  content   String
+  timestamp DateTime @default(now())
+}
